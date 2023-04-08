@@ -29,6 +29,7 @@ impl Default for CppConfig<'_> {
                 vec!["g++", "--version"],
                 vec!["clang++", "--version"],
             ],
+            logos: vec!["c++", "++", "++"], // substitute symbols instead of compiler $name
         }
     }
 }

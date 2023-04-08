@@ -32,6 +32,7 @@ impl Default for CConfig<'_> {
                 // for completeness, although I've never seen a clang that wasn't cc
                 vec!["clang", "--version"],
             ],
+            logos: vec!["cc", "", ""], // substitute symbols instead of compiler $name
         }
     }
 }

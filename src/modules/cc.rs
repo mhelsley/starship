@@ -62,6 +62,20 @@ fn parse_module<T>(
                             })?;
                     Some(Ok(Cow::Borrowed(cc_compiler)))
                 }
+                "logo" => {
+                    let cc_compiler_info = &cc_compiler_info.deref().as_ref()?.stdout;
+
+                    let cc_compiler_logo =
+                        compilers
+                            .iter()
+                            .enumerate()
+                            .find_map(|(index, (_compiler_name, compiler_hint))| {
+                                cc_compiler_info
+                                    .contains(compiler_hint)
+                                    .then_some(config.logos[index])
+                            })?;
+                    Some(Ok(Cow::Borrowed(cc_compiler_logo)))
+                }
                 "version" => {
                     let cc_compiler_info = &cc_compiler_info.deref().as_ref()?.stdout;
 

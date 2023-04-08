@@ -21,4 +21,5 @@ pub struct CcConfig<'a, T> {
     pub detect_files: Vec<&'a str>,
     pub detect_folders: Vec<&'a str>,
     pub commands: Vec<Vec<&'a str>>,
+    pub logos: Vec<&'a str>, // same order and len as commands
 }
