@@ -17,6 +17,7 @@ pub struct CConfig<'a> {
     pub detect_files: Vec<&'a str>,
     pub detect_folders: Vec<&'a str>,
     pub commands: Vec<Vec<&'a str>>,
+    pub logos: Vec<&'a str>,
 }
 
 impl<'a> Default for CConfig<'a> {
@@ -38,6 +39,7 @@ impl<'a> Default for CConfig<'a> {
                 // for completeness, although I've never seen a clang that wasn't cc
                 vec!["clang", "--version"],
             ],
+            logos: vec![], // substitute symbols instead of compiler $name
         }
     }
 }

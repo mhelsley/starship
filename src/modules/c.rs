@@ -41,9 +41,17 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
                     let c_compiler_info = &c_compiler_info.deref().as_ref()?.stdout;
 
                     let c_compiler = if c_compiler_info.contains("clang") {
-                        "clang"
+                        if config.logos.len() > 2 {
+                            config.logos[2]
+                        } else {
+                            "clang"
+                        }
                     } else if c_compiler_info.contains("Free Software Foundation") {
-                        "gcc"
+                        if config.logos.len() > 1 {
+                            config.logos[1]
+                        } else {
+                            "gcc"
+                        }
                     } else {
                         return None;
                     };
