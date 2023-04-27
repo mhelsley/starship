@@ -107,7 +107,16 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
     let remote_name_string = remote_name.unwrap_or_default();
     let mut remote_name_graphemes: Vec<&str> = remote_name_string.graphemes(true).collect();
 
-    // Truncate fields if need be
+    let mut remote_url_graphemes: Vec<&str> = Vec::new();
+    if let Some(remote) = repo.remote.as_ref() {
+        if let Some(url) = &remote.url {
+            remote_url_graphemes = url.graphemes(true).collect();
+        }
+    }
+
+    // Truncate fields if need be. Don't truncate the URL because
+    // the user may use it to create a functional link rather than
+    // display it.
     for e in &mut [
         &mut graphemes,
         &mut remote_branch_graphemes,
@@ -147,6 +156,13 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
                 "remote_name" => {
                     if show_remote && !remote_name_graphemes.is_empty() {
                         Some(Ok(remote_name_graphemes.concat()))
+                    } else {
+                        None
+                    }
+                }
+                "remote_url" => {
+                    if show_remote && !remote_url_graphemes.is_empty() {
+                        Some(Ok(remote_url_graphemes.concat()))
                     } else {
                         None
                     }

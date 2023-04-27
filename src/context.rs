@@ -784,6 +784,7 @@ impl Repo {
 pub struct Remote {
     pub branch: Option<String>,
     pub name: Option<String>,
+    pub url: Option<String>,
 }
 
 // A struct of Criteria which will be used to verify current PathBuf is
@@ -922,8 +923,15 @@ fn get_remote_repository_info(
     let name = repository
         .branch_remote_name(branch_name.shorten(), gix::remote::Direction::Fetch)
         .map(|n| n.as_bstr().to_string());
+    // BROKEN doesn't seem to ever get the remote URL
+    let url: Option<String> = repository
+        .try_find_remote_without_url_rewrite(branch_name)
+        .and_then(std::result::Result::ok)
+        .and_then(|remote| remote.url(gix::remote::Direction::Fetch)
+                                 .map(|ru| ru.to_bstring()
+                                             .to_string()));
 
-    Some(Remote { branch, name })
+    Some(Remote { branch, name, url })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
