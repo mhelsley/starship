@@ -23,6 +23,48 @@ impl TextSegment {
     }
 }
 
+/// Type that holds a URL and text with an associated style
+#[derive(Clone)]
+pub struct URLSegment {
+    displayed: TextSegment,
+    url: String,
+}
+
+impl URLSegment {
+    // Returns the AnsiString of the segment value
+    fn ansi_string(&self) -> AnsiString {
+        let displayed = self.displayed.ansi_string();
+
+        let url = self.url.clone();
+        displayed.hyperlink::<String>(url.into())
+    }
+}
+
+#[cfg(test)]
+mod url_seg_tests {
+    use super::URLSegment;
+    use nu_ansi_term::Color;
+
+    #[test]
+    fn ansi_string_link() {
+        let style = Color::Blue.bold();
+
+        let inputs = vec![("example.com", "example.com")];
+
+        for (text, expected) in &inputs {
+            let u = URLSegment {
+                displayed: TextSegment {
+                    value: String::from(*text),
+                    style: Some(style),
+                },
+                url: String::from(format!("https://{}", *text)),
+            };
+            let actual = u.ansi_string();
+            assert_eq!(style.paint(*expected), actual);
+        }
+    }
+}
+
 /// Type that holds fill text with an associated style
 #[derive(Clone)]
 pub struct FillSegment {
@@ -92,6 +134,7 @@ mod fill_seg_tests {
 #[derive(Clone)]
 pub enum Segment {
     Text(TextSegment),
+    URL(URLSegment),
     Fill(FillSegment),
     LineTerm,
 }
@@ -115,6 +158,17 @@ impl Segment {
         segs
     }
 
+    /// Creates a new URL segment
+    pub fn link<T>(text: TextSegment, url: T) -> Self
+    where
+        T: Into<String>,
+    {
+        Self::URL(URLSegment {
+            displayed: text,
+            url: url.into(),
+        })
+    }
+
     /// Creates a new fill segment
     pub fn fill<T>(style: Option<Style>, value: T) -> Self
     where
@@ -130,6 +184,7 @@ impl Segment {
         match self {
             Self::Fill(fs) => fs.style,
             Self::Text(ts) => ts.style,
+            Self::URL(us) => us.displayed.style,
             Self::LineTerm => None,
         }
     }
@@ -146,6 +201,11 @@ impl Segment {
                     ts.style = style
                 }
             }
+            Self::URL(us) => {
+                if us.displayed.style.is_none() {
+                    us.displayed.style = style
+                }
+            }
             Self::LineTerm => {}
         }
     }
@@ -154,6 +214,7 @@ impl Segment {
         match self {
             Self::Fill(fs) => &fs.value,
             Self::Text(ts) => &ts.value,
+            Self::URL(us) => &us.displayed.value,
             Self::LineTerm => LINE_TERMINATOR_STRING,
         }
     }
@@ -163,6 +224,7 @@ impl Segment {
         match self {
             Self::Fill(fs) => fs.ansi_string(None),
             Self::Text(ts) => ts.ansi_string(),
+            Self::URL(us) => us.ansi_string(),
             Self::LineTerm => AnsiString::from(LINE_TERMINATOR_STRING),
         }
     }
@@ -171,6 +233,7 @@ impl Segment {
         match self {
             Self::Fill(fs) => fs.value.width_graphemes(),
             Self::Text(ts) => ts.value.width_graphemes(),
+            Self::URL(us) => us.displayed.value.width_graphemes(),
             Self::LineTerm => 0,
         }
     }

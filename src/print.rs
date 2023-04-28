@@ -109,6 +109,7 @@ pub fn get_prompt(context: Context) -> String {
 
     // Creates a root module and prints it.
     let mut root_module = Module::new("Starship Root", "The root module", None);
+
     root_module.set_segments(
         formatter
             .parse(None, Some(&context))
@@ -542,6 +543,36 @@ mod test {
         context.target = Target::Right;
 
         let expected = String::from(">>"); // should strip new lines
+        let actual = get_prompt(context);
+        assert_eq!(expected, actual);
+    }
+
+    fn title_format() {
+        let mut context = default_context().set_config(toml::toml! {
+                add_newline=false
+                format="$character"
+                [character]
+                format=">\n>"
+        });
+        context.target = Target::Main;
+
+        let expected = String::from("\x1B]0;Hello World!\x1B\\>\n>");
+        let mut actual = get_prompt(context);
+        actual.title("Hello World!");
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn url_format() {
+        let mut context = default_context().set_config(toml::toml! {
+                add_newline=false
+                format="$character"
+                [character]
+                format="[[>][https://example.com]]\n>"
+        });
+        context.target = Target::Main;
+
+        let expected = String::from(">\n>");
         let actual = get_prompt(context);
         assert_eq!(expected, actual);
     }

@@ -475,7 +475,8 @@ CMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
 pub fn wrap_colorseq_for_shell(ansi: String, shell: Shell) -> String {
     const ESCAPE_BEGIN: &str = "\u{1b}\u{5b}"; // \e[
     const ESCAPE_END: &str = "m";
-    wrap_seq_for_shell(ansi, shell, ESCAPE_BEGIN, ESCAPE_END)
+    wrap_seq_for_shell(wrap_seq_for_shell(ansi, shell, ESCAPE_BEGIN, ESCAPE_END), shell, "\u{1b}]8;;", "\u{1b}\\")
+        .replace("\u{1b}\\", "\u{1b}\\\\")
 }
 
 /// Many shells cannot deal with raw unprintable characters and miscompute the cursor position,

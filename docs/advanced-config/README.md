@@ -341,3 +341,22 @@ Not every style string will be displayed correctly by every terminal. In particu
 - Many terminals disable support for `blink` by default
 - `hidden` is [not supported on iTerm](https://gitlab.com/gnachman/iterm2/-/issues/4564).
 - `strikethrough` is not supported by the default macOS Terminal.app
+
+## Links
+
+Styled text can be combined with links in the terminal so that a terse
+portion of your prompt may provide an active link to something that
+gives more context. For example you may reconfigure the `directory` module to provide an active `file:///h/u/.../foo` link to the current directory by
+changing the format from:
+
+```
+[directory]
+format = '[$path]($style)[$read_only]($read_only_style) '
+```
+
+to:
+
+```
+[directory]
+format = '[[[$path]($style)[$read_only]($read_only_style)][file://$path]] '
+```

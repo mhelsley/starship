@@ -4,7 +4,14 @@
 //
 // Should be started with SOI and ended with EOI, with a format string in it.
 expression = _{ SOI ~ value* ~ EOI }
-value = _{ text | variable | textgroup | conditional }
+value = _{ text | variable | link | textgroup | conditional }
+
+// Link
+//
+// Display text that is associated with an undisplayed URL.
+//
+link = { "[[" ~ format ~ "][" ~ url ~ "]]" }
+url = { (text | variable)+ }
 
 // Variable
 //

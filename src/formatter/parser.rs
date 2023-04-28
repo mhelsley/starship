@@ -14,6 +14,7 @@ fn parse_value(value: Pair<Rule>) -> FormatElement {
     match value.as_rule() {
         Rule::text => FormatElement::Text(parse_text(value).into()),
         Rule::variable => FormatElement::Variable(parse_variable(value).into()),
+        Rule::link => FormatElement::Link(parse_link(value).into()),
         Rule::textgroup => FormatElement::TextGroup(parse_textgroup(value)),
         Rule::conditional => {
             FormatElement::Conditional(parse_format(value.into_inner().next().unwrap()))
@@ -37,6 +38,17 @@ fn parse_variable(variable: Pair<Rule>) -> &str {
     variable.into_inner().next().unwrap().as_str()
 }
 
+fn parse_link(link: Pair<Rule>) -> Link {
+    let mut inner_rules = link.into_inner();
+    let format = inner_rules.next().unwrap();
+    let url = inner_rules.next().unwrap();
+
+    Link {
+        format: parse_format(format),
+        url: parse_url(url),
+    }
+}
+
 fn parse_text(text: Pair<Rule>) -> String {
     text.into_inner()
         .flat_map(|pair| pair.as_str().chars())
@@ -53,6 +65,16 @@ fn parse_style(style: Pair<Rule>) -> Vec<StyleElement> {
         .map(|pair| match pair.as_rule() {
             Rule::string => StyleElement::Text(pair.as_str().into()),
             Rule::variable => StyleElement::Variable(parse_variable(pair).into()),
+            _ => unreachable!(),
+        })
+        .collect()
+}
+
+fn parse_url(url: Pair<Rule>) -> Vec<URLElement> {
+    url.into_inner()
+        .map(|pair| match pair.as_rule() {
+            Rule::text => URLElement::Text(parse_text(pair).into()),
+            Rule::variable => URLElement::Variable(parse_variable(pair).into()),
             _ => unreachable!(),
         })
         .collect()

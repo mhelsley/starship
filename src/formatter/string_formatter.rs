@@ -255,6 +255,58 @@ impl<'a> StringFormatter<'a> {
             )
         }
 
+        fn parse_link<'a>(
+            link: Link<'a>,
+            variables: &'a VariableMapType<'a>,
+            style_variables: &'a StyleVariableMapType<'a>,
+            context: Option<&Context>,
+        ) -> Result<Vec<Segment>, StringFormatterError> {
+            // like parse_textgroup
+            let u = parse_url(link.url, variables, context)?;
+            let mut vs = parse_format(link.format, None, variables, style_variables, context)?;
+            vs.iter_mut().for_each(|segment| match segment {
+                Segment::Text(text) => {
+                    // TODO There's got to be a better way to wrap
+                    //      the "text" in a URLSegment. We're doing
+                    //      so much clone()-ing of the URL and the
+                    //      "text" it's kind of silly.
+                    *segment = Segment::link(text.to_owned(), u.clone());
+                }
+                _ => {}
+            });
+            Ok(vs)
+        }
+
+        fn parse_url<'a>(
+            url: Vec<URLElement>,
+            variables: &'a VariableMapType<'a>,
+            context: Option<&Context>,
+        ) -> Result<String, StringFormatterError> {
+            // like parse_style() only normal variables
+            let strings = url
+                .into_iter()
+                .map(|url_chunk| match url_chunk {
+                    URLElement::Text(text) => text,
+                    URLElement::Variable(name) => {
+                        let variable = variables.get(name.as_ref()).unwrap_or(&None);
+                        match variable {
+                            Some(Ok(VariableValue::Plain(text))) => text.clone(),
+                            Some(Ok(VariableValue::NoEscapingPlain(text))) => text.clone(),
+                            _ => "".into(),
+                        }
+                    }
+                })
+                .collect::<Vec<Cow<str>>>();
+            let string = shell_prompt_escape(
+                strings.join(""),
+                match context {
+                    None => Shell::Unknown,
+                    Some(c) => c.shell,
+                },
+            );
+            Ok(string)
+        }
+
         fn parse_style<'a>(
             style: Vec<StyleElement>,
             variables: &'a StyleVariableMapType<'a>,
@@ -303,6 +355,13 @@ impl<'a> StringFormatter<'a> {
                                 },
                             ),
                         )),
+                        FormatElement::Link(link) => {
+                            let link = Link {
+                                format: link.format,
+                                url: link.url,
+                            };
+                            parse_link(link, variables, style_variables, context)
+                        }
                         FormatElement::TextGroup(textgroup) => {
                             let textgroup = TextGroup {
                                 format: textgroup.format,
