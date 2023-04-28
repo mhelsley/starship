@@ -186,6 +186,18 @@ For example:
 - When `$combined` is a shortcut for `\[$a$b\]`, `'($combined)'` will show nothing only if `$a` and `$b` are both `None`.
   This works the same as `'(\[$a$b\] )'`.
 
+#### Links
+
+TODO Document links
+```toml
+format = "[[formatted text][url]]"
+```
+
+Will output
+```
+formatted text
+```
+
 ### Negative matching
 
 Many modules have `detect_extensions`, `detect_files`, and `detect_folders` variables. These take
