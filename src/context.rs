@@ -915,6 +915,7 @@ fn get_remote_repository_info(
     repository: &Repository,
     branch_name: Option<&gix::refs::FullNameRef>,
 ) -> Option<Remote> {
+/* TODO REMOVE COMMENTED PRIOR CODE
     let branch_name = branch_name?;
     let branch = repository
         .branch_remote_ref_name(branch_name, gix::remote::Direction::Fetch)
@@ -930,6 +931,46 @@ fn get_remote_repository_info(
         .and_then(|remote| remote.url(gix::remote::Direction::Fetch)
                                  .map(|ru| ru.to_bstring()
                                              .to_string()));
+*/
+    let mut branch_name: gix::refs::FullName = branch_name?.into();
+    let mut branch: Option<String> = None;
+    let mut name: Option<String> = None;
+    let mut url: Option<String> = None;
+
+    loop {
+        // Walk the local branches until we reach a remote and its branch.
+        // Typically iterates once or twice, first going to the main/master
+        // branch before the next iteration finds the remote.
+        match (
+            repository
+                .branch_remote_ref_name(branch_name.as_ref(), gix::remote::Direction::Fetch)
+                .and_then(std::result::Result::ok),
+            repository
+                .branch_remote_name(branch_name.as_ref(), gix::remote::Direction::Fetch)
+                .map(|n| n.as_bstr().to_string()),
+        ) {
+            (Some(b), Some(n)) => {
+                if n.as_str() == "." {
+                    let bfr: &gix::refs::FullNameRef = b.borrow();
+                    branch_name = bfr.into();
+                    continue;
+                }
+                url = repository
+                    .find_remote(n.as_str())
+                    .map(|r| {
+                        r.url(gix::remote::Direction::Fetch)
+                            .map(|url| url.to_bstring().to_string())
+                    })
+                    .unwrap_or(None);
+                branch = Some(b.shorten().to_string());
+                name = Some(n);
+                break;
+            }
+            _ => {
+                break;
+            }
+        }
+    }
 
     Some(Remote { branch, name, url })
 }
