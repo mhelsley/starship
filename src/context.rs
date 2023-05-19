@@ -750,26 +750,49 @@ fn get_current_branch(repository: &Repository) -> Option<String> {
     Some(shorthand.to_string())
 }
 
-const FETCH: gix::remote::Direction = gix::remote::Direction::Fetch;
 fn get_remote_repository_info(
     repository: &Repository,
     branch_name: Option<&str>,
 ) -> Option<Remote> {
-    let branch_name = branch_name?;
-    let branch = repository
-        .branch_remote_ref(branch_name)
-        .and_then(std::result::Result::ok)
-        .map(|full_name_ref| full_name_ref.shorten().to_string());
-    let name: Option<String> = repository
-        .branch_remote_name(branch_name)
-        .map(|n| n.as_bstr().to_string());
-    // BROKEN doesn't seem to ever get the remote URL
-    let url: Option<String> = repository
-        .try_find_remote_without_url_rewrite(branch_name)
-        .and_then(std::result::Result::ok)
-        .and_then(|remote| remote.url(FETCH)
-                                 .map(|ru| ru.to_bstring()
-                                             .to_string()));
+    let mut branch_name = branch_name?.to_string();
+    let mut branch: Option<String> = None;
+    let mut name: Option<String> = None;
+    let mut url: Option<String> = None;
+
+    loop {
+        // Walk the local branches until we reach a remote and its branch.
+        // Typically iterates once or twice, first going to the main/master
+        // branch before the next iteration finds the remote.
+        match (
+            repository
+                .branch_remote_ref(branch_name.as_str())
+                .and_then(std::result::Result::ok)
+                .map(|full_name_ref| full_name_ref.shorten().to_string()),
+            repository
+                .branch_remote_name(branch_name.as_str())
+                .map(|n| n.as_bstr().to_string()),
+        ) {
+            (Some(b), Some(n)) => {
+                if n.as_str() == "." {
+                    branch_name = b;
+                    continue;
+                }
+                url = repository
+                    .find_remote(n.as_str())
+                    .map(|r| {
+                        r.url(gix::remote::Direction::Fetch)
+                            .map(|url| url.to_bstring().to_string())
+                    })
+                    .unwrap_or(None);
+                branch = Some(b);
+                name = Some(n);
+                break;
+            }
+            _ => {
+                break;
+            }
+        }
+    }
 
     Some(Remote { branch, name, url })
 }
