@@ -125,6 +125,12 @@ fn main() {
     logger::init();
     init_global_threadpool();
 
+    let orig_panic_hook = std::panic::take_hook();
+    fn starship_panic_hook(info: &std::panic::PanicInfo) {
+        orig_panic_hook(info)
+    }
+    std::panic::set_hook(Box::new(starship_panic_hook));
+
     // Delete old log files
     rayon::spawn(|| {
         let log_dir = logger::get_log_dir();
