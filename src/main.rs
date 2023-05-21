@@ -127,6 +127,7 @@ fn main() {
 
     let orig_panic_hook = std::panic::take_hook();
     fn starship_panic_hook(info: &std::panic::PanicInfo) {
+        // TODO leave a breadcrumb indicating we crashed
         orig_panic_hook(info)
     }
     std::panic::set_hook(Box::new(starship_panic_hook));
