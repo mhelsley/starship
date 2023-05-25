@@ -107,12 +107,42 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
     let remote_name_string = remote_name.unwrap_or_default();
     let mut remote_name_graphemes: Vec<&str> = remote_name_string.graphemes(true).collect();
 
-    let mut remote_url: &String = &String::from("");
+    let mut remote_url: String = String::from("");
     let mut remote_url_graphemes: Vec<&str> = Vec::new();
     if let Some(remote) = repo.remote.as_ref() {
         if let Some(url) = &remote.url {
-            remote_url = url;
-            remote_url_graphemes = url.graphemes(true).collect();
+            if url.contains("@github.com:") || url.contains("://github.com/") {
+                match &remote.branch {
+                    Some(branch) => {
+                        let tree = "/tree/";
+                        remote_url.reserve(url.len() + tree.len() + branch.len());
+                        remote_url.push_str(url.trim_end_matches(".git"));
+                        remote_url.push_str(tree);
+                        remote_url.push_str(&branch);
+                    }
+                    _ => {
+                        remote_url = url.clone();
+                    }
+                }
+            } else if url.contains("@gitlab") || url.contains("://gitlab") {
+                match &remote.branch {
+                    Some(branch) => {
+                        let tree = "/-/tree/";
+                        let ref_type = "?ref_type=heads";
+                        remote_url.reserve(url.len() + tree.len() + branch.len() + ref_type.len());
+                        remote_url.push_str(url.trim_end_matches(".git"));
+                        remote_url.push_str(tree);
+                        remote_url.push_str(&branch);
+                        remote_url.push_str(ref_type);
+                    }
+                    _ => {
+                        remote_url = url.clone();
+                    }
+                }
+            } else {
+                remote_url = url.clone();
+            }
+            remote_url_graphemes = remote_url.graphemes(true).collect();
         }
     }
 
@@ -140,7 +170,7 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
         formatter
             .map_meta(|var, _| match var {
                 "symbol" => Some(config.symbol),
-                "remote_symbol" => config.get_remote_symbol(remote_url),
+                "remote_symbol" => config.get_remote_symbol(&remote_url),
                 _ => None,
             })
             .map_style(|variable| match variable {
