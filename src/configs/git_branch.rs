@@ -84,6 +84,7 @@ impl Default for GitBranchConfig<'_> {
                 String::from("bitbucket.org") => "\u{f171}", // devicon: \xe6\x03
                 String::from("github.com") => "\u{f09b}", // devicon: \xe6\x09
                 String::from("gitlab.com") => "\u{f296}",
+                String::from("gitlab.gnome.org") => "\u{f02ac}",
                 //String::from("git.code.sf.net") => "",
                 String::from(".googlesource.com") => "\u{f1a0}",
                 String::from("kernel.org") => "\u{f17c}",
