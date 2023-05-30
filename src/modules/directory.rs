@@ -49,6 +49,8 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
     log::debug!("Physical dir: {:?}", &physical_dir);
     log::debug!("Display dir: {:?}", &display_dir);
 
+    let raw_path_string = physical_dir.to_slash_lossy().to_string();
+
     // Attempt repository path contraction (if we are in a git repository)
     // Otherwise use the logical path, automatically contracting
     let repo = if config.truncate_to_repo || config.repo_root_style.is_some() {
@@ -150,6 +152,7 @@ pub fn module<'a>(context: &'a Context) -> Option<Module<'a>> {
                 "path" => Some(Ok(path_vec[2].as_str())),
                 "before_root_path" => Some(Ok(path_vec[0].as_str())),
                 "repo_root" => Some(Ok(path_vec[1].as_str())),
+                "raw_path" => Some(Ok(&raw_path_string)),
                 "read_only" => {
                     if is_readonly_dir(physical_dir) {
                         Some(Ok(config.read_only))
