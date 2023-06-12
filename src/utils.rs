@@ -473,55 +473,46 @@ CMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
 
 /// Wraps ANSI color escape sequences in the shell-appropriate wrappers.
 pub fn wrap_colorseq_for_shell(ansi: String, shell: Shell) -> String {
-    const ESCAPE_BEGIN: char = '\u{1b}';
-    const ESCAPE_END: char = 'm';
+    const ESCAPE_BEGIN: &str = "\u{1b}\u{5b}"; // \e[
+    const ESCAPE_END: &str = "m";
     wrap_seq_for_shell(ansi, shell, ESCAPE_BEGIN, ESCAPE_END)
 }
 
 /// Many shells cannot deal with raw unprintable characters and miscompute the cursor position,
 /// leading to strange visual bugs like duplicated/missing chars. This function wraps a specified
 /// sequence in shell-specific escapes to avoid these problems.
-pub fn wrap_seq_for_shell(
-    ansi: String,
-    shell: Shell,
-    escape_begin: char,
-    escape_end: char,
-) -> String {
+pub fn wrap_seq_for_shell(ansi: String, shell: Shell, esc_begin: &str, esc_end: &str) -> String {
     const BASH_BEG: &str = "\u{5c}\u{5b}"; // \[
     const BASH_END: &str = "\u{5c}\u{5d}"; // \]
     const ZSH_BEG: &str = "\u{25}\u{7b}"; // %{
     const ZSH_END: &str = "\u{25}\u{7d}"; // %}
-    const TCSH_BEG: &str = "\u{25}\u{7b}"; // %{
-    const TCSH_END: &str = "\u{25}\u{7d}"; // %}
+    const TCSH_BEG: &str = ZSH_BEG;
+    const TCSH_END: &str = ZSH_END;
 
-    // ANSI escape codes cannot be nested, so we can keep track of whether we're
-    // in an escape or not with a single boolean variable
-    let mut escaped = false;
-    let final_string: String = ansi
-        .chars()
-        .map(|x| {
-            if x == escape_begin && !escaped {
-                escaped = true;
+    match shell {
+        Shell::Bash | Shell::Zsh | Shell::Tcsh => {}
+        _ => {
+            return ansi;
+        }
+    }
+
+    ansi.split(esc_begin)
+        .flat_map(|x| x.splitn(2, esc_end))
+        .enumerate()
+        .map(|(i, x)| {
+            if (i % 2) == 1 {
+                // Entries with odd index are escape sequences
                 match shell {
-                    Shell::Bash => format!("{BASH_BEG}{escape_begin}"),
-                    Shell::Zsh => format!("{ZSH_BEG}{escape_begin}"),
-                    Shell::Tcsh => format!("{TCSH_BEG}{escape_begin}"),
-                    _ => x.to_string(),
-                }
-            } else if x == escape_end && escaped {
-                escaped = false;
-                match shell {
-                    Shell::Bash => format!("{escape_end}{BASH_END}"),
-                    Shell::Zsh => format!("{escape_end}{ZSH_END}"),
-                    Shell::Tcsh => format!("{escape_end}{TCSH_END}"),
+                    Shell::Bash => format!("{BASH_BEG}{esc_begin}{x}{esc_end}{BASH_END}"),
+                    Shell::Zsh => format!("{ZSH_BEG}{esc_begin}{x}{esc_end}{ZSH_END}"),
+                    Shell::Tcsh => format!("{TCSH_BEG}{esc_begin}{x}{esc_end}{TCSH_END}"),
                     _ => x.to_string(),
                 }
             } else {
                 x.to_string()
             }
         })
-        .collect();
-    final_string
+        .collect::<String>()
 }
 
 fn internal_exec_cmd<T: AsRef<OsStr> + Debug, U: AsRef<OsStr> + Debug>(
