@@ -579,8 +579,8 @@ CMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
 
 /// Wraps ANSI color escape sequences in the shell-appropriate wrappers.
 pub fn wrap_colorseq_for_shell(ansi: String, shell: Shell) -> String {
-    const ESCAPE_BEGIN: char = '\u{1b}';
-    const ESCAPE_END: char = 'm';
+    const ESCAPE_BEGIN: &str = "\u{1b}\u{5b}"; // \e[
+    const ESCAPE_END: &str = "m";
     wrap_seq_for_shell(ansi, shell, ESCAPE_BEGIN, ESCAPE_END)
 }
 
@@ -590,8 +590,8 @@ pub fn wrap_colorseq_for_shell(ansi: String, shell: Shell) -> String {
 pub fn wrap_seq_for_shell(
     ansi: String,
     shell: Shell,
-    escape_begin: char,
-    escape_end: char,
+    escape_begin: &str,
+    escape_end: &str,
 ) -> String {
     let (beg, end) = match shell {
         // \[ and \]
@@ -601,24 +601,23 @@ pub fn wrap_seq_for_shell(
         _ => return ansi,
     };
 
-    // ANSI escape codes cannot be nested, so we can keep track of whether we're
-    // in an escape or not with a single boolean variable
-    let mut escaped = false;
-    let final_string: String = ansi
-        .chars()
-        .map(|x| {
-            if x == escape_begin && !escaped {
-                escaped = true;
-                format!("{beg}{escape_begin}")
-            } else if x == escape_end && escaped {
-                escaped = false;
-                format!("{escape_end}{end}")
+    // Split into escaped segments and unescaped segments such that
+    // an odd index of the segment indicates the segment is is escaped.
+    // If an escaped segment would be the first segment then this inserts
+    // a zero-length string as the first segment.
+    // Simplifies innermost branching and reduces to, at most,
+    // one application of format!() per segment.
+    ansi.split(escape_begin)
+        .flat_map(|x| x.splitn(2, escape_end))
+        .enumerate()
+        .map(|(i, x)| {
+            if (i % 2) == 1 {
+                format!("{beg}{escape_begin}{x}{escape_end}{end}")
             } else {
                 x.to_string()
             }
         })
-        .collect();
-    final_string
+        .collect::<String>()
 }
 
 fn internal_exec_cmd<T: AsRef<OsStr> + Debug, U: AsRef<OsStr> + Debug>(
