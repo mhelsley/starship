@@ -77,6 +77,7 @@ mod spack;
 mod status;
 mod sudo;
 mod swift;
+mod terminal;
 mod terraform;
 mod time;
 mod username;
@@ -183,6 +184,7 @@ pub fn handle<'a>(module: &str, context: &'a Context) -> Option<Module<'a>> {
             "sudo" => sudo::module(context),
             "terraform" => terraform::module(context),
             "time" => time::module(context),
+            "terminal" => terminal::module(context),
             "crystal" => crystal::module(context),
             "username" => username::module(context),
             "vlang" => vlang::module(context),
@@ -300,6 +302,7 @@ pub fn description(module: &str) -> &'static str {
         "swift" => "The currently installed version of Swift",
         "terraform" => "The currently selected terraform workspace and version",
         "time" => "The current local time",
+        "terminal" => "The current terminal",
         "username" => "The active user's username",
         "vagrant" => "The currently installed version of Vagrant",
         "vcsh" => "The currently active VCSH repository",

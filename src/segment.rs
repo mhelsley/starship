@@ -40,6 +40,19 @@ impl URLSegment {
     }
 }
 
+#[derive(Clone)]
+pub struct TitleSegment {
+    // No styling
+    title: String,
+}
+
+impl TitleSegment {
+    // Returns the AnsiString of the segment value
+    fn ansi_string(&self) -> AnsiString {
+        AnsiString::title(self.title.clone())
+    }
+}
+
 #[cfg(test)]
 mod url_seg_tests {
     use super::URLSegment;
@@ -135,6 +148,7 @@ mod fill_seg_tests {
 pub enum Segment {
     Text(TextSegment),
     URL(URLSegment),
+    Title(TitleSegment),
     Fill(FillSegment),
     LineTerm,
 }
@@ -169,6 +183,14 @@ impl Segment {
         })
     }
 
+    /// Creates a new Title segment
+    pub fn title<T>(text: T) -> Self
+    where
+        T: Into<String>,
+    {
+        Self::Title(TitleSegment { title: text.into() })
+    }
+
     /// Creates a new fill segment
     pub fn fill<T>(style: Option<Style>, value: T) -> Self
     where
@@ -185,6 +207,7 @@ impl Segment {
             Self::Fill(fs) => fs.style,
             Self::Text(ts) => ts.style,
             Self::URL(us) => us.displayed.style,
+            Self::Title(_) => None,
             Self::LineTerm => None,
         }
     }
@@ -206,7 +229,7 @@ impl Segment {
                     us.displayed.style = style
                 }
             }
-            Self::LineTerm => {}
+            Self::Title(_) | Self::LineTerm => {}
         }
     }
 
@@ -215,6 +238,7 @@ impl Segment {
             Self::Fill(fs) => &fs.value,
             Self::Text(ts) => &ts.value,
             Self::URL(us) => &us.displayed.value,
+            Self::Title(ts) => &ts.title,
             Self::LineTerm => LINE_TERMINATOR_STRING,
         }
     }
@@ -225,6 +249,7 @@ impl Segment {
             Self::Fill(fs) => fs.ansi_string(None),
             Self::Text(ts) => ts.ansi_string(),
             Self::URL(us) => us.ansi_string(),
+            Self::Title(ts) => ts.ansi_string(),
             Self::LineTerm => AnsiString::from(LINE_TERMINATOR_STRING),
         }
     }
@@ -234,6 +259,7 @@ impl Segment {
             Self::Fill(fs) => fs.value.width_graphemes(),
             Self::Text(ts) => ts.value.width_graphemes(),
             Self::URL(us) => us.displayed.value.width_graphemes(),
+            Self::Title(ts) => ts.title.width_graphemes(),
             Self::LineTerm => 0,
         }
     }
