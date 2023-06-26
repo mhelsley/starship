@@ -96,6 +96,7 @@ mod starship_root;
 pub mod status;
 pub mod sudo;
 pub mod swift;
+pub mod terminal;
 pub mod terraform;
 pub mod time;
 pub mod typst;
@@ -307,6 +308,8 @@ pub struct FullConfig<'a> {
     sudo: sudo::SudoConfig<'a>,
     #[serde(borrow)]
     swift: swift::SwiftConfig<'a>,
+    #[serde(borrow)]
+    terminal: terminal::TerminalConfig<'a>,
     #[serde(borrow)]
     terraform: terraform::TerraformConfig<'a>,
     #[serde(borrow)]
