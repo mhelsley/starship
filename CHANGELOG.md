@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/starship/starship/compare/v1.16.0...v1.16.1) (2023-08-16)
+
+
+### Bug Fixes
+
+* **git:** prevent `core.fsmonitor` from executing external commands ([#3981](https://github.com/starship/starship/issues/3981)) ([03278e4](https://github.com/starship/starship/commit/03278e4de4f540cbd0e346e9df878c7e6798d757))
+
 ## [1.16.0](https://github.com/starship/starship/compare/v1.15.0...v1.16.0) (2023-07-30)
 
 
