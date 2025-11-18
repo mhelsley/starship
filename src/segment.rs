@@ -34,7 +34,7 @@ pub struct URLSegment {
 
 impl URLSegment {
     // Returns the AnsiString of the segment value
-    fn ansi_string(&self, prev: Option<&AnsiStyle>) -> AnsiString {
+    fn ansi_string(&self, prev: Option<&AnsiStyle>) -> AnsiString<'_> {
         let displayed = self.displayed.ansi_string(prev);
 
         let url = self.url.clone();
@@ -50,7 +50,7 @@ pub struct TitleSegment {
 
 impl TitleSegment {
     // Returns the AnsiString of the segment value
-    fn ansi_string(&self, _prev: Option<&AnsiStyle>) -> AnsiString {
+    fn ansi_string(&self, _prev: Option<&AnsiStyle>) -> AnsiString<'_> {
         AnsiString::title(self.title.clone())
     }
 }
