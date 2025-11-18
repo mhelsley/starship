@@ -13,6 +13,7 @@ use gix::{
     sec::{self as git_sec, trust::DefaultForLevel},
     state as git_state,
 };
+use std::borrow::Borrow;
 #[cfg(test)]
 use std::collections::HashMap;
 use std::collections::HashSet;
